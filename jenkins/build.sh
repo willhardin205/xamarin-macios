@@ -70,6 +70,10 @@ echo "Configuring the build with: $CONFIGURE_FLAGS"
 # shellcheck disable=SC2086
 ./configure $CONFIGURE_FLAGS
 
+# Try to prevent 32-bit dialogs
+if test -d ../../maccore; then
+	make -C ../../maccore/tools/silence-32bit-dialog allow-32bit-executables
+fi
 time make -j8
 time make install -j8
 
