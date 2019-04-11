@@ -2554,8 +2554,8 @@ public class B
 		[TestCase (Target.Dev, MTouchLinker.Unspecified, MTouchRegistrar.Static, "armv7+llvm")]
 		[TestCase (Target.Dev, MTouchLinker.Unspecified, MTouchRegistrar.Static, "armv7+llvm+thumb2")]
 		// non-linked device build
-		[TestCase (Target.Dev, MTouchLinker.DontLink, MTouchRegistrar.Static, "")]
-		[TestCase (Target.Dev, MTouchLinker.DontLink, MTouchRegistrar.Dynamic, "")]
+		[TestCase (Target.Dev, MTouchLinker.DontLink, MTouchRegistrar.Static, "arm64")] // armv7 Xamarin.iOS.dll don't link builds are not possible anymore because we go over the code size limit,
+		[TestCase (Target.Dev, MTouchLinker.DontLink, MTouchRegistrar.Dynamic, "arm64")] // since this is out of our control we are now forcing this test to arm64. Ref. https://github.com/xamarin/xamarin-macios/issues/5512
 		// sdk device build
 		[TestCase (Target.Dev, MTouchLinker.LinkSdk, MTouchRegistrar.Static, "")]
 		[TestCase (Target.Dev, MTouchLinker.LinkSdk, MTouchRegistrar.Dynamic, "")]
@@ -3080,7 +3080,7 @@ class Test {
 
 				var tests = new [] {
 					new { Name = "linkall", Abi = "armv7s", Link = MTouchLinker.Unspecified },
-					new { Name = "dontlink", Abi = "armv7s", Link = MTouchLinker.DontLink },
+					new { Name = "dontlink", Abi = "arm64", Link = MTouchLinker.DontLink },
 					new { Name = "dual", Abi = "armv7,arm64", Link = MTouchLinker.Unspecified },
 				};
 
@@ -3963,6 +3963,8 @@ public class HandlerTest
 				case "_xamarin_nfloat_objc_msgSendSuper": // Xm only
 					continue;
 				case "____chkstk_darwin": // compiler magic, unrelated to XI/XM
+				case "___block_descriptor_28_e5_v4@?0l": // new Xcode 10.2 clang option
+				case "___block_descriptor_48_e5_v8@?0l": // new Xcode 10.2 clang option
 					continue;
 				default:
 					missingSimlauncherSymbols.Add (symbol);
@@ -4353,8 +4355,7 @@ public class TestApp {
 
 		public static void AssertDeviceAvailable ()
 		{
-			if (!Configuration.include_device)
-				Assert.Ignore ("This build does not include device support.");
+			Configuration.AssertDeviceAvailable ();
 		}
 
 		public static IEnumerable<string> GetNativeSymbols (string file, string arch = null)
