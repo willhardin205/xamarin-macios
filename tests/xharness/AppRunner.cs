@@ -613,7 +613,7 @@ namespace xharness
 
 			bool? success = null;
 			bool launch_failure = false;
-
+			bool silence_32bit_dialog = false;
 			if (isExtension) {
 				switch (extension) {
 				case Extension.TodayExtension:
@@ -627,6 +627,10 @@ namespace xharness
 				default:
 					throw new NotImplementedException ();
 				}
+			} else if (Target == AppRunnerTarget.Simulator_iOS32) {
+				args.Append (" --launchsimbundleid ");
+				args.Append (BundleIdentifier);
+				silence_32bit_dialog = true;
 			} else {
 				args.Append (isSimulator ? " --launchsim " : " --launchdev ");
 				args.Append (StringUtils.Quote (launchAppPath));
@@ -680,6 +684,49 @@ namespace xharness
 				await crash_reports.StartCaptureAsync ();
 
 				main_log.WriteLine ("Starting test run");
+
+				if (silence_32bit_dialog) {
+					var silence_log = Logs.Create ("silence-32bit-log.log", "Silence 32-bit dialog log");
+
+					// install the app in the simulator first so that we can get the full executable path
+					var silence_args = new StringBuilder ();
+					if (!string.IsNullOrEmpty (Harness.XcodeRoot))
+						silence_args.Append (" --sdkroot ").Append (Harness.XcodeRoot);
+					for (int i = -1; i < Harness.Verbosity; i++)
+						silence_args.Append (" -v ");
+					silence_args.Append (" --device=:v2:udid=").Append (simulator.UDID).Append (" ");
+					silence_args.Append (" --launchsimulator ");
+					silence_args.Append ("--installsim ");
+					silence_args.Append (StringUtils.Quote (launchAppPath));
+					var silencer = await ProcessHelper.ExecuteCommandAsync (Harness.MlaunchPath, silence_args.ToString (), silence_log, TimeSpan.FromMinutes (1), cancellation_token: cancellation_source.Token);
+
+					// mlaunch --installsim will shutdown the simulator again, so we must reboot it, otherwise 'simctl get_app_container' doesn't work
+					await ProcessHelper.ExecuteCommandAsync ("xcrun", $"simctl boot {simulator.UDID}", silence_log, TimeSpan.FromMinutes (1), cancellation_token: cancellation_source.Token);
+
+					// 'simctl get_app_container' to get the path to the app bundle
+					var output = new StringWriter ();
+					using (var process = new Process ()) {
+						process.StartInfo.FileName = "xcrun";
+						process.StartInfo.Arguments = $"simctl get_app_container {simulator.UDID} {BundleIdentifier}";
+						var rv = await process.RunAsync (silence_log, output, output, timeout: TimeSpan.FromSeconds (10), cancellation_token: cancellation_source.Token);
+						if (rv.Succeeded) {
+							var app_path = output.ToString ().Trim ();
+							var executable_path = Path.Combine (app_path, Path.GetFileNameWithoutExtension (app_path));
+							if (File.Exists (executable_path)) {
+								// finally we got the executable path so that we can silence the 32-bit dialog for it.
+								await Harness.Silence32bitDialog (silence_log, executable_path);
+							} else {
+								silence_log.WriteLine ($"Could not find executable: {executable_path} does not exist.");
+							}
+						} else {
+							silence_log.WriteLine ("Failed to get the app bundle path");
+						}
+					}
+
+					// Shut the simulator down again, otherwise mlaunch ends up confused.
+					await ProcessHelper.ExecuteCommandAsync ("xcrun", $"simctl shutdown {simulator.UDID}", silence_log, TimeSpan.FromMinutes (1), cancellation_token: cancellation_source.Token);
+				}
+
 
 				var result = await ProcessHelper.ExecuteCommandAsync (Harness.MlaunchPath, args.ToString (), run_log, TimeSpan.FromMinutes (Harness.Timeout), cancellation_token: cancellation_source.Token);
 				if (result.TimedOut) {

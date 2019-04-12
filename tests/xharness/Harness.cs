@@ -892,6 +892,16 @@ namespace xharness
  			return build_bcl_tests;
  		}
 
+		public async Task Silence32bitDialog (Log log, string executable_path)
+		{
+			using (var silence_32bit_dialog = new Process ()) {
+				silence_32bit_dialog.StartInfo.FileName = "sudo";
+				silence_32bit_dialog.StartInfo.Arguments = Path.GetFullPath (Path.Combine (RootDirectory, "..", "..", "maccore", "tools", "silence-32bit-dialog", "notify32")) + " " + StringUtils.Quote (executable_path);
+				var result = await silence_32bit_dialog.RunAsync (log, true, TimeSpan.FromSeconds (10));
+				log.WriteLine ($"Silence result: TimedOut: {result.TimedOut} ExitCode: {result.ExitCode}");
+				// Continue even if the silencer failed.
+			}
+		}
 	}
 
 	public class CrashReportSnapshot

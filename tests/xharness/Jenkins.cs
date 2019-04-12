@@ -145,8 +145,8 @@ namespace xharness
 			}
 
 			for (int i = 0; i < targets.Length; i++)
-				runtasks.Add (new RunSimulatorTask (buildTask, Simulators.SelectDevices (targets [i], SimulatorLoadLog)) { Platform = platforms [i], Ignored = buildTask.Ignored });
-
+				runtasks.Add (new RunSimulatorTask (buildTask, platforms [i], Simulators.SelectDevices (targets [i], SimulatorLoadLog)) { Platform = platforms [i], Ignored = buildTask.Ignored });
+			 
 			return runtasks;
 		}
 
@@ -429,7 +429,7 @@ namespace xharness
 				}
 			}
 
-			var testVariations = CreateTestVariations (runSimulatorTasks, (buildTask, test) => new RunSimulatorTask (buildTask, test.Candidates)).ToList ();
+			var testVariations = CreateTestVariations (runSimulatorTasks, (buildTask, test) => new RunSimulatorTask (buildTask, test.Platform, test.Candidates)).ToList ();
 
 			foreach (var taskGroup in testVariations.GroupBy ((RunSimulatorTask task) => task.Platform)) {
 				yield return new AggregatedRunSimulatorTask (taskGroup) {
@@ -3102,6 +3102,9 @@ namespace xharness
 			}
 
 			using (var resource = await NotifyAndAcquireDesktopResourceAsync ()) {
+				if (Platform == TestPlatform.Mac_Unified32 || Platform == TestPlatform.Mac_UnifiedXM45_32 || Platform == TestPlatform.Mac_Classic)
+					await Harness.Silence32bitDialog (Logs.Create ($"silence-32bit-dialog-{Timestamp}.txt", "32bit dialog log"), Path);
+
 				using (var proc = new Process ()) {
 					proc.StartInfo.FileName = Path;
 					if (IsUnitTest) {
@@ -3572,7 +3575,7 @@ namespace xharness
 			}
 		}
 
-		public RunSimulatorTask (XBuildTask build_task, IEnumerable<SimDevice> candidates = null)
+		public RunSimulatorTask (XBuildTask build_task, TestPlatform platform, IEnumerable<SimDevice> candidates = null)
 			: base (build_task, candidates)
 		{
 			var project = Path.GetFileNameWithoutExtension (ProjectFile);
@@ -3581,7 +3584,11 @@ namespace xharness
 			} else if (project.EndsWith ("-watchos", StringComparison.Ordinal)) {
 				AppRunnerTarget = AppRunnerTarget.Simulator_watchOS;
 			} else {
-				AppRunnerTarget = AppRunnerTarget.Simulator_iOS;
+				if (platform == TestPlatform.iOS_Unified32 || platform == TestPlatform.iOS) {
+					AppRunnerTarget = AppRunnerTarget.Simulator_iOS32;
+				} else {
+					AppRunnerTarget = AppRunnerTarget.Simulator_iOS64;
+				}
 			}
 		}
 
