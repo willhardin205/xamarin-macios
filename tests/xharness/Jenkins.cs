@@ -1388,6 +1388,7 @@ namespace xharness
 										response.ContentType = System.Net.Mime.MediaTypeNames.Text.Plain;
 										break;
 									}
+									response.ContentType += "; charset=utf-8";
 									while ((read = fs.Read (buffer, 0, buffer.Length)) > 0)
 										response.OutputStream.Write (buffer, 0, read);
 								}

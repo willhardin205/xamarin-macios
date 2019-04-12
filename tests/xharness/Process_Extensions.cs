@@ -75,6 +75,8 @@ namespace xharness
 			process.StartInfo.RedirectStandardError = true;
 			process.StartInfo.RedirectStandardOutput = true;
 			process.StartInfo.UseShellExecute = false;
+			process.StartInfo.StandardOutputEncoding = Encoding.UTF8;
+			process.StartInfo.StandardErrorEncoding = Encoding.UTF8;
 
 			if (environment_variables != null) {
 				foreach (var kvp in environment_variables)
