@@ -1178,7 +1178,7 @@ namespace xharness
 							break;
 						case "/set-option":
 							response.ContentType = System.Net.Mime.MediaTypeNames.Text.Plain;
-														switch (request.Url.Query) {
+							switch (request.Url.Query) {
 							case "?clean":
 								CleanSuccessfulTestRuns = true;
 								break;
