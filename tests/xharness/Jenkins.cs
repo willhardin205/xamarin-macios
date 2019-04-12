@@ -22,15 +22,15 @@ namespace xharness
 		public bool IncludeAll;
 		public bool IncludeClassicMac = true;
 		public bool IncludeBcl;
-		public bool IncludeMac = true;
+		public bool IncludeMac = false;
 		public bool IncludeMac32 = true;
 		public bool IncludeiOS = true;
 		public bool IncludeiOSExtensions;
 		public bool ForceExtensionBuildOnly;
-		public bool IncludetvOS = true;
-		public bool IncludewatchOS = true;
+		public bool IncludetvOS = false;
+		public bool IncludewatchOS = false;
 		public bool IncludeMmpTest;
-		public bool IncludeiOSMSBuild = true;
+		public bool IncludeiOSMSBuild = false;
 		public bool IncludeMtouch;
 		public bool IncludeBtouch;
 		public bool IncludeMacBindingProject;
@@ -133,8 +133,8 @@ namespace xharness
 				platforms = new TestPlatform [] { TestPlatform.watchOS };
 				break;
 			case TestPlatform.iOS_Unified:
-				targets = new AppRunnerTarget [] { AppRunnerTarget.Simulator_iOS32, AppRunnerTarget.Simulator_iOS64 };
-				platforms = new TestPlatform [] { TestPlatform.iOS_Unified32, TestPlatform.iOS_Unified64 };
+				targets = new AppRunnerTarget [] { AppRunnerTarget.Simulator_iOS32/*, AppRunnerTarget.Simulator_iOS64 */ };
+				platforms = new TestPlatform [] { TestPlatform.iOS_Unified32/*, TestPlatform.iOS_Unified64 */ };
 				break;
 			case TestPlatform.iOS_TodayExtension64:
 				targets = new AppRunnerTarget[] { AppRunnerTarget.Simulator_iOS64 };
@@ -784,7 +784,7 @@ namespace xharness
 
 			foreach (var project in Harness.MacTestProjects) {
 				bool ignored = !IncludeMac;
-				bool ignored32 = !IncludeMac || !IncludeMac32;
+				bool ignored32 = !IncludeMac32;
 				if (!IncludeMmpTest && project.Path.Contains ("mmptest"))
 					ignored = true;
 
