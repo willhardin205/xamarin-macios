@@ -619,7 +619,7 @@ namespace xharness
 				case Extension.TodayExtension:
 					args.Append (isSimulator ? " --launchsimbundleid" : " --launchdevbundleid");
 					args.Append (" todayviewforextensions:");
-					args.Append (BundleIdentifier);
+					args.Append (StringUtils.Quote (BundleIdentifier));
 					args.Append (" --observe-extension ");
 					args.Append (StringUtils.Quote (launchAppPath));
 					break;
@@ -629,7 +629,7 @@ namespace xharness
 				}
 			} else if (Target == AppRunnerTarget.Simulator_iOS32) {
 				args.Append (" --launchsimbundleid ");
-				args.Append (BundleIdentifier);
+				args.Append (StringUtils.Quote (BundleIdentifier));
 				silence_32bit_dialog = true;
 			} else {
 				args.Append (isSimulator ? " --launchsim " : " --launchdev ");
@@ -707,7 +707,7 @@ namespace xharness
 					var output = new StringWriter ();
 					using (var process = new Process ()) {
 						process.StartInfo.FileName = "xcrun";
-						process.StartInfo.Arguments = $"simctl get_app_container {simulator.UDID} {BundleIdentifier}";
+						process.StartInfo.Arguments = $"simctl get_app_container {simulator.UDID} {StringUtils.Quote (BundleIdentifier)}";
 						var rv = await process.RunAsync (silence_log, output, output, timeout: TimeSpan.FromSeconds (10), cancellation_token: cancellation_source.Token);
 						if (rv.Succeeded) {
 							var app_path = output.ToString ().Trim ();
