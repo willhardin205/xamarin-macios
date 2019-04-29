@@ -435,7 +435,12 @@ marshal_return_value (void *context, const char *type, size_t size, void *vvalue
 				it->state->rax = *(uint64_t *) mono_object_unbox (value);
 			}
 		} else if (size < 8) {
-			memcpy (&it->state->rax, mono_object_unbox (value), size);
+			type = skip_type_name (type);
+			if (!strncmp (type, "f}", 2)) {
+				memcpy (&it->state->xmm0, mono_object_unbox (value), 4);
+			} else {
+				memcpy (&it->state->rax, mono_object_unbox (value), size);
+			}
 		} else {
 			*exception_gchandle = xamarin_create_mt_exception (xamarin_strdup_printf ("Xamarin.iOS: Cannot marshal struct return type %s (size: %i)\n", type, (int) size));
 			return;
