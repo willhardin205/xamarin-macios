@@ -324,7 +324,7 @@ xamarin_create_mt_exception (char *msg)
 // Example:
 //    {bc}d => d
 //    {a{b}cd}e => e
-const char *
+static const char *
 skip_nested_brace (const char *type)
 {
 	if (*type != '{')
