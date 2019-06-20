@@ -194,8 +194,7 @@ namespace xharness
 				return;
 			
 			// Make sure there's a top-level version too.
-			var project = csproj.ChildNodes [1];
-			var property_group = project.ChildNodes [0];
+			var property_group = csproj.SelectSingleNode("/*/*[local-name() = 'PropertyGroup' and not(@Condition)]");
 
 			var intermediateOutputPath = csproj.CreateElement ("IntermediateOutputPath", MSBuild_Namespace);
 			intermediateOutputPath.InnerText = value;
@@ -230,7 +229,11 @@ namespace xharness
 
 		public static void RemoveTargetFrameworkIdentifier (this XmlDocument csproj)
 		{
-			RemoveNode (csproj, "TargetFrameworkIdentifier");
+			try {
+				RemoveNode (csproj, "TargetFrameworkIdentifier");
+			} catch {
+				// ignore exceptions, if not present, we are not worried
+			}
 		}
 
 		public static void SetAssemblyName (this XmlDocument csproj, string value)
@@ -564,16 +567,21 @@ namespace xharness
 				FindAndReplace (node, find, replace);
 		}
 
-		public static void FixInfoPListInclude (this XmlDocument csproj, string suffix)
+		public static void FixInfoPListInclude (this XmlDocument csproj, string suffix, string fullPath = null)
 		{
 			var import = csproj.SelectSingleNode ("/*/*/*[local-name() = 'None' and contains(@Include ,'Info.plist')]");
-			import.Attributes ["Include"].Value = import.Attributes ["Include"].Value.Replace("Info.plist", $"Info{suffix}.plist");
-			var logicalName = import.SelectSingleNode ("./*[local-name() = 'LogicalName']");
-			if (logicalName == null) {
-				logicalName = csproj.CreateElement ("LogicalName", MSBuild_Namespace);
-				import.AppendChild (logicalName);
+			if (import != null) {
+				if (string.IsNullOrEmpty (fullPath))
+					import.Attributes ["Include"].Value = import.Attributes ["Include"].Value.Replace ("Info.plist", $"Info{suffix}.plist");
+				else 
+					import.Attributes ["Include"].Value = import.Attributes ["Include"].Value.Replace ("Info.plist", $"{fullPath}\\Info{suffix}.plist");
+				var logicalName = import.SelectSingleNode ("./*[local-name() = 'LogicalName']");
+				if (logicalName == null) {
+					logicalName = csproj.CreateElement ("LogicalName", MSBuild_Namespace);
+					import.AppendChild (logicalName);
+				}
+				logicalName.InnerText = "Info.plist";
 			}
-			logicalName.InnerText = "Info.plist";
 		}
 
 		public static string GetInfoPListInclude (this XmlDocument csproj)
