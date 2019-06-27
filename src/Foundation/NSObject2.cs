@@ -150,6 +150,7 @@ namespace Foundation {
 
 		internal static IntPtr Initialize ()
 		{
+			is_protocol_cache = new Dictionary <Type, Dictionary<IntPtr, bool>> (Runtime.TypeEqualityComparer);
 			return class_ptr;
 		}
 
@@ -260,7 +261,27 @@ namespace Foundation {
 #endif
 		}
 #endif
+
+		static Dictionary<Type, Dictionary<IntPtr, bool>> is_protocol_cache;
 		static bool IsProtocol (Type type, IntPtr protocol)
+		{
+			lock (is_protocol_cache) {
+				if (is_protocol_cache.TryGetValue (type, out var typeDict))
+					if (typeDict.TryGetValue (protocol, out var value))
+						return value;
+			}
+			var is_protocol = IsProtocolUncached (type, protocol);
+
+			lock (is_protocol_cache) {
+				if (!is_protocol_cache.TryGetValue (type, out var typeDict))
+					is_protocol_cache [type] = typeDict = new Dictionary<IntPtr, bool> (Runtime.IntPtrEqualityComparer);
+				typeDict [protocol] = is_protocol;
+			}
+
+			return is_protocol;
+		}
+
+		static bool IsProtocolUncached (Type type, IntPtr protocol)
 		{
 			while (type != typeof (NSObject) && type != null) {
 				var attrs = type.GetCustomAttributes (typeof(ProtocolAttribute), false);
