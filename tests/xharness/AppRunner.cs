@@ -715,6 +715,9 @@ namespace xharness
 				args.Append (" --disable-memory-limits");
 
 			var timeout = TimeSpan.FromMinutes (Harness.Timeout * TimeoutMultiplier);
+
+			args.Append ($" -setenv=KILL_TIMEOUT_SECONDS={((int) timeout.TotalSeconds - 30)}");
+
 			if (isSimulator) {
 				if (!await FindSimulatorAsync ())
 					return 1;
