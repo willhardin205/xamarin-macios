@@ -51,6 +51,7 @@ namespace Xamarin.Utils {
 			} else {
 				NSLog (str_format, $"[NSLog] {msg}");
 			}
+			MonoTouchFixtures.AppDelegate.Runner.Writer.WriteLine (msg);
 		}
 
 		static void TriggerThread ()

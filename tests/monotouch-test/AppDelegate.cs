@@ -23,6 +23,8 @@ namespace MonoTouchFixtures {
 		static UIWindow window;
 		TouchRunner runner;
 
+		public static AppDelegate Instance;
+		public static TouchRunner Runner { get { return Instance.runner; } }
 #if !__TVOS__
 		public override bool AccessibilityPerformMagicTap ()
 		{
@@ -45,6 +47,8 @@ namespace MonoTouchFixtures {
 		//
 		public override bool FinishedLaunching (UIApplication app, NSDictionary options)
 		{
+			Instance = this;
+
 			// create a new window instance based on the screen size
 			window = new UIWindow (UIScreen.MainScreen.Bounds);
 			runner = new TouchRunner (window);
