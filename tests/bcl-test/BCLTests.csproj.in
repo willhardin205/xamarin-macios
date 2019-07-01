@@ -253,6 +253,9 @@
       <Link>ViewController.designer.cs</Link>
       <DependentUpon>ViewController.cs</DependentUpon>
     </Compile>
+    <Compile Include="..\monotouch-test\HangDetector.cs">
+      <Link>HangDetector.cs</Link>
+    </Compile>
     %REGISTER TYPE%
   </ItemGroup>
   <ItemGroup>

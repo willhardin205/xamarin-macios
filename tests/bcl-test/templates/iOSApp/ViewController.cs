@@ -66,8 +66,10 @@ namespace BCLTests {
 			base.ViewDidLoad ();
 			var options = ApplicationOptions.Current;
 			TcpTextWriter writer = null;
-			if (!string.IsNullOrEmpty (options.HostName))
+			if (!string.IsNullOrEmpty (options.HostName)) {
 				writer = new TcpTextWriter (options.HostName, options.HostPort);
+				Xamarin.Utils.HangDetector.AdditionalStream = writer;
+			}
 
 			// we generate the logs in two different ways depending if the generate xml flag was
 			// provided. If it was, we will write the xml file to the tcp writer if present, else
