@@ -348,7 +348,7 @@ namespace xharness
 			return isTouchUnit;
 		}
 
-		(string resultLine, bool failed) ParseTouchUnitXml (StreamReader stream, StreamWriter writer)
+		(string resultLine, bool failed) ParseTouchUnitXml (StreamReader stream, TextWriter writer)
 		{
 			long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
 			total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -376,7 +376,7 @@ namespace xharness
 			return (resultLine, total == 0 || errors != 0 || failed != 0);
 		}
 
-		(string resultLine, bool failed) ParseNUnitXml (StreamReader stream, StreamWriter writer)
+		(string resultLine, bool failed) ParseNUnitXml (StreamReader stream, TextWriter writer)
 		{
 			long total, errors, failed, notRun, inconclusive, ignored, skipped, invalid;
 			total = errors = failed = notRun = inconclusive = ignored = skipped = invalid = 0L;
@@ -457,7 +457,7 @@ namespace xharness
 				try {
 					using (var streamReaderTmp = new StreamReader (listener_log.FullPath)) {
 						var isTouchUnit = IsTouchUnitResult (streamReaderTmp); // method resets position
-						using (var writer = new StreamWriter (listener_log.FullPath, true)) { // write the human result to the log file
+						using (var writer = Logs.Create ($"processed-log-{Harness.Timestamp}.log", "Processed test log")) {
 							if (isTouchUnit) {
 								var (resultLine, failed)= ParseTouchUnitXml (streamReaderTmp, writer);
 								parseResult.resultLine = resultLine;

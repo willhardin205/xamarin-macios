@@ -20,17 +20,15 @@ namespace BCLTests.TestRunner.Core {
 		
 		static string SelectHostName (string[] names, int port, out TcpClient tcp_client)
 		{
+			tcp_client = null;
+
 			if (names.Length == 0)
 				return null;
-
-			if (names.Length == 1)
-				return names [0];
 
 			object lock_obj = new object ();
 			string result = null;
 			int failures = 0;
-
-			tcp_client = null;
+			TcpClient selected_client = null;
 
 			using (var evt = new ManualResetEvent (false)) {
 				for (int i = names.Length - 1; i >= 0; i--) {
@@ -42,7 +40,7 @@ namespace BCLTests.TestRunner.Core {
 								var client = new TcpClient (name, port);
 								lock (lock_obj) {
 									if (result == null) {
-										tcp_client = client;
+										selected_client = client;
 										result = name;
 										Console.WriteLine ($"TcpTextWriter: successfully connected to {name}:{port}");
 									}
@@ -61,6 +59,8 @@ namespace BCLTests.TestRunner.Core {
 
 				// Wait for 1 success or all failures
 				evt.WaitOne ();
+
+				tcp_client = selected_client;
 			}
 
 			return result;

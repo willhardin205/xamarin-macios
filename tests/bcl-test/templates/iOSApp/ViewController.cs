@@ -69,7 +69,6 @@ namespace BCLTests {
 			if (!string.IsNullOrEmpty (options.HostName)) {
 				Console.WriteLine ($"Will try to write test output to Hosts: {options.HostName} Port: {options.HostPort}");
 				writer = new TcpTextWriter (options.HostName, options.HostPort);
-				Xamarin.Utils.HangDetector.AdditionalStream = writer;
 			} else {
 				Console.WriteLine ("Not writing test output to Tcp target, since no hosts specified.");
 			}
@@ -78,6 +77,8 @@ namespace BCLTests {
 			// provided. If it was, we will write the xml file to the tcp writer if present, else
 			// we will write the normal console output using the LogWriter
 			var logger = (writer == null || options.EnableXml) ? new LogWriter () : new LogWriter (writer);
+			if (writer != null && !options.EnableXml)
+				Xamarin.Utils.HangDetector.AdditionalStream = writer;
 			logger.MinimumLogLevel = MinimumLogLevel.Info;
 			var testAssemblies = GetTestAssemblies ();
 			var runner = RegisterType.IsXUnit ? (Xamarin.iOS.UnitTests.TestRunner) new XUnitTestRunner (logger) : new NUnitTestRunner (logger);
