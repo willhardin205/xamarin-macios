@@ -18,7 +18,7 @@ namespace BCLTests.TestRunner.Core {
 		TcpClient client;
 		StreamWriter writer;
 		
-		static string SelectHostName (string[] names, int port)
+		static string SelectHostName (string[] names, int port, out TcpClient tcp_client)
 		{
 			if (names.Length == 0)
 				return null;
@@ -30,6 +30,8 @@ namespace BCLTests.TestRunner.Core {
 			string result = null;
 			int failures = 0;
 
+			tcp_client = null;
+
 			using (var evt = new ManualResetEvent (false)) {
 				for (int i = names.Length - 1; i >= 0; i--) {
 					var name = names [i];
@@ -38,11 +40,9 @@ namespace BCLTests.TestRunner.Core {
 							try {
 								Console.WriteLine ($"TcpTextWriter: attempting connection to {name}:{port}");
 								var client = new TcpClient (name, port);
-								using (var writer = new StreamWriter (client.GetStream ())) {
-									writer.WriteLine ("ping");
-								}
 								lock (lock_obj) {
 									if (result == null) {
+										tcp_client = client;
 										result = name;
 										Console.WriteLine ($"TcpTextWriter: successfully connected to {name}:{port}");
 									}
@@ -73,15 +73,14 @@ namespace BCLTests.TestRunner.Core {
 
 			if (hostName == null)
 				throw new ArgumentNullException (nameof (hostName));
-			HostName = SelectHostName (hostName.Split (','), port);
-			Port = port;
 
 #if __IOS__
 			UIApplication.SharedApplication.NetworkActivityIndicatorVisible = true;
 #endif
 
 			try {
-				client = new TcpClient (HostName, port);
+				Port = port;
+				HostName = SelectHostName (hostName.Split (','), port, out client);
 				writer = new StreamWriter (client.GetStream ());
 			}
 			catch {
