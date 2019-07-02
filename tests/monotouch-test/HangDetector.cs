@@ -16,6 +16,9 @@ namespace Xamarin.Utils {
 		public static void Start ()
 		{
 			str_format = NSString.CreateNative ("%s");
+			ResetSignal (6); // SIGABRT
+			ResetSignal (10); // SIGBUS
+			ResetSignal (13); // SIGPIPE
 			pid = System.Diagnostics.Process.GetCurrentProcess ().Id;
 
 			if (!double.TryParse (Environment.GetEnvironmentVariable ("THREADDUMP_INTERVAL_SECONDS"), out var interval)) 
@@ -86,6 +89,18 @@ namespace Xamarin.Utils {
 		[DllImport ("libc")]
 		extern static int sigaction (int signal, ref sigaction_struct action, IntPtr zero);
 
+		static void ResetSignal (int signal)
+		{
+			int rv;
+			sigaction_struct sa;
+			sa.handler = IntPtr.Zero; // SIG_DFL
+			sa.mask = 0;
+			sa.flags = 0;
+
+			rv = sigaction (signal, ref sa, IntPtr.Zero);
+			LogEverywhere ($"HangDetector disabled custom handling for signal {signal}.");
+		}
+
 		static void KillerThread (object argument)
 		{
 			var timeout = (TimeSpan) argument;
@@ -100,14 +115,14 @@ namespace Xamarin.Utils {
 			Thread.Sleep (timeout);
 
 			/* SIGABRT usually causes a crash report */
-			rv = sigaction (6, ref sa, IntPtr.Zero);
-			LogEverywhere ($"HangDetector will now kill(SIGABRT) the app after hitting a termination timeout of {timeout.TotalMinutes} minutes. sigaction rv: {rv}");
+			ResetSignal (6);
+			LogEverywhere ($"HangDetector will now kill(SIGABRT) the app after hitting a termination timeout of {timeout.TotalMinutes} minutes.");
 			rv = kill (pid, 6);
 			LogEverywhere ($"Failed to SIGABRT? error code: {rv}");
 
 			/* Let's try a bit harder, SIGSEGV now */
-			rv = sigaction (11, ref sa, IntPtr.Zero);
-			LogEverywhere ($"HangDetector will now kill(SIGSEGV) the app after hitting a termination timeout of {timeout.TotalMinutes} minutes. sigaction rv: {rv}");
+			ResetSignal (11);
+			LogEverywhere ($"HangDetector will now kill(SIGSEGV) the app after hitting a termination timeout of {timeout.TotalMinutes} minutes.");
 			rv = kill (pid, 11);
 			LogEverywhere ($"Failed to SIGSEGV?!? error code: {rv}");
 

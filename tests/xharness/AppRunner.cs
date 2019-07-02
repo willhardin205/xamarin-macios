@@ -453,15 +453,9 @@ namespace xharness
 			// On the other hand, the nunit and xunit do not have that data and have to be parsed.
 			if (Harness.InJenkins) {
 				(string resultLine, bool failed, bool crashed) parseResult = (null, false, false);
-				// move the xml to a tmp path, that path will be use to read the xml
-				// in the reader, and the writer will use the stream from the logger to
-				// write the human readable log
-				var tmpFile = Path.Combine (Path.GetTempPath (), Guid.NewGuid ().ToString ()); 
-
-				File.Move (listener_log.FullPath, tmpFile);
 				crashed = false;
 				try {
-					using (var streamReaderTmp = new StreamReader (tmpFile)) {
+					using (var streamReaderTmp = new StreamReader (listener_log.FullPath)) {
 						var isTouchUnit = IsTouchUnitResult (streamReaderTmp); // method resets position
 						using (var writer = new StreamWriter (listener_log.FullPath, true)) { // write the human result to the log file
 							if (isTouchUnit) {
@@ -513,9 +507,6 @@ namespace xharness
 						parseResult.crashed = true;
 						return parseResult;
 					}
-				} finally {
-					if (File.Exists (tmpFile))
-						File.Delete (tmpFile);
 				}
 				
 			} else {

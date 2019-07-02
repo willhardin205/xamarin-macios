@@ -36,16 +36,20 @@ namespace BCLTests.TestRunner.Core {
 					ThreadPool.QueueUserWorkItem ((v) =>
 						{
 							try {
+								Console.WriteLine ($"TcpTextWriter: attempting connection to {name}:{port}");
 								var client = new TcpClient (name, port);
 								using (var writer = new StreamWriter (client.GetStream ())) {
 									writer.WriteLine ("ping");
 								}
 								lock (lock_obj) {
-									if (result == null)
+									if (result == null) {
 										result = name;
+										Console.WriteLine ($"TcpTextWriter: successfully connected to {name}:{port}");
+									}
 								}
 								evt.Set ();
-							} catch (Exception) {
+							} catch (Exception ex) {
+								Console.WriteLine ($"TcpTextWriter: failed connection to {name}:{port}: {ex.Message}");
 								lock (lock_obj) {
 									failures++;
 									if (failures == names.Length)

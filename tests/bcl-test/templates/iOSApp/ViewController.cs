@@ -67,8 +67,11 @@ namespace BCLTests {
 			var options = ApplicationOptions.Current;
 			TcpTextWriter writer = null;
 			if (!string.IsNullOrEmpty (options.HostName)) {
+				Console.WriteLine ($"Will try to write test output to Hosts: {options.HostName} Port: {options.HostPort}");
 				writer = new TcpTextWriter (options.HostName, options.HostPort);
 				Xamarin.Utils.HangDetector.AdditionalStream = writer;
+			} else {
+				Console.WriteLine ("Not writing test output to Tcp target, since no hosts specified.");
 			}
 
 			// we generate the logs in two different ways depending if the generate xml flag was

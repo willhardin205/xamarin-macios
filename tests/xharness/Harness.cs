@@ -668,6 +668,7 @@ namespace xharness
 		
 		public bool InJenkins {
 			get {
+				return true;
 				var buildRev = Environment.GetEnvironmentVariable ("BUILD_REVISION");
 				return !string.IsNullOrEmpty (buildRev) && buildRev == "jenkins";
 			}
