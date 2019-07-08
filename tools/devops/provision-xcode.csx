@@ -1,5 +1,3 @@
-#load "utils.csx"
-
 using System.Collections.Generic;
 using System.IO;
 using System.Net;
@@ -19,6 +17,25 @@ using Xamarin.Provisioning.Model;
 
 var commit = Environment.GetEnvironmentVariable ("BUILD_SOURCEVERSION");
 var provision_from_commit = Environment.GetEnvironmentVariable ("PROVISION_FROM_COMMIT") ?? commit;
+
+// Looks for a variable either in the environment, or in current repo's Make.config.
+// Returns null if the variable couldn't be found.
+IEnumerable<string> make_config = null;
+string FindConfigurationVariable (string variable, string hash = "HEAD")
+{
+	var value = Environment.GetEnvironmentVariable (variable);
+	if (!string.IsNullOrEmpty (value))
+		return value;
+
+	if (make_config == null)
+		make_config = Exec ("git", "show", $"{hash}:Make.config");
+	foreach (var line in make_config) {
+		if (line.StartsWith (variable + "=", StringComparison.Ordinal))
+			return line.Substring (variable.Length + 1);
+	}
+
+	return null;
+}
 
 string FindVariable (string variable)
 {
