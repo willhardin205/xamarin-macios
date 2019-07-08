@@ -9,6 +9,16 @@ jobs:
 - job: macOS
   displayName: Provision Xcode
   timeoutInMinutes: 30
+  strategy:
+    matrix:
+      # We have rougly 900 tests, which take a while to build for device.
+      # So in that case, we split them in 3 buckets of roughly 300 tests each,
+      # based on the first letter of the project's filename.
+      A:
+        MODE: 'A'
+      B:
+        MODE: 'B'
+
   pool:
     name: '$(macOSVersion)'
 
