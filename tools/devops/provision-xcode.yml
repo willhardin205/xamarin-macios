@@ -1,0 +1,31 @@
+# Xamarin
+# Provision Xcode test YML
+
+variables:
+  azure_build_url: '$(System.CollectionUri)/$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)'
+  macOSVersion: 'Hosted Mac Internal Mojave'
+
+jobs:
+- job: macOS
+  displayName: Provision Xcode
+  timeoutInMinutes: 30
+  pool:
+    name: '$(macOSVersion)'
+
+  steps:
+  - checkout: self
+    persistCredentials: true
+
+  - bash: ./tools/devops/system-info.sh
+    displayName: System Info
+
+  - task: provisionator@2
+    displayName: Provision Xcode
+    inputs:
+      provisionator_uri: '$(provisionator-uri)'
+      github_token: '$(github-pat)'
+      provisioning_script: $(System.DefaultWorkingDirectory)/tools/devops/provision-xcode.csx
+
+  - bash: ./tools/devops/system-info.sh
+    displayName: System Info post provisioning
+
