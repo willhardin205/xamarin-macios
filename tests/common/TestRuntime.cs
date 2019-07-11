@@ -52,6 +52,49 @@ partial class TestRuntime
 
 	public const string BuildVersion_iOS9_GM = "13A340";
 
+	struct sigaction_struct {
+		public IntPtr handler;
+		public int mask;
+		public int flags;
+	}
+
+	[DllImport ("libc")]
+	extern static int sigaction (int signal, ref sigaction_struct action, IntPtr zero);
+
+	static void ResetSignal (int signal)
+	{
+		int rv;
+		sigaction_struct sa;
+		sa.handler = IntPtr.Zero; // SIG_DFL
+		sa.mask = 0;
+		sa.flags = 0;
+
+		rv = sigaction (signal, ref sa, IntPtr.Zero);
+	}
+
+	static TestRuntime ()
+	{
+		bool reset_abort = false;
+
+#if !__MACOS__
+		// For now only on device, since we use the AOT compiler there and crash reports will symbolicate managed frames as well.
+		if (Runtime.Arch == Arch.DEVICE)
+			reset_abort = true;
+#endif
+
+		if (reset_abort) {
+			// Mono tries to handle SIGABRT and print something useful
+			// More often than not, mono ends up hanging instead, and the
+			// useful info is not nearly as useful as a properly symbolicated
+			// crash report (even if we get both). So just remove mono's
+			// SIGABRT handler and instead rely on just the crash report.
+			// Too bad we can't do the same for SIGSEGV, but those
+			// can be NullReferenceExceptions, so mono must handle them :/
+			ResetSignal (6 /* SIGABRT */);
+			Console.WriteLine ("SIGABRT has been reset to the default action (terminate the process).");
+		}
+	}
+
 	public static string GetiOSBuildVersion ()
 	{
 #if __WATCHOS__
