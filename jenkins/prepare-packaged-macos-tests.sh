@@ -51,7 +51,7 @@ if test -f ~/.jenkins-profile; then
 fi
 
 env
-rm -f -- ./*.zip
+rm -f -- ./*.7z
 curl -fL "$URL" --output mac-test-package.7z
 rm -rf mac-test-package
 7z x mac-test-package.7z
