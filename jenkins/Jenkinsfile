@@ -345,7 +345,7 @@ def runXamarinMacTests (url, macOS, maccore_hash, xamarin_macios_hash)
             }
         }
     } finally {
-        sh ("rm -rf ${workspace}/mac-test-package ${workspace}/*.zip")
+        sh ("rm -rf ${workspace}/mac-test-package ${workspace}/*.zip ${workspace}/*.7z")
         // Find and upload any crash reports
         sh (script: """
             rm -Rf ${workspace}/crash-reports
@@ -669,7 +669,7 @@ timestamps {
                                     echoError ("Failed to package Xamarin.Mac tests (exit code: ${exitCode}")
                                     failedStages.add (currentStage)
                                 }
-                                uploadFiles ("tests/*.zip", "wrench", virtualPath)
+                                uploadFiles ("tests/*.7z", "wrench", virtualPath)
                             }
 
                             timeout (time: 13, unit: 'HOURS') {
